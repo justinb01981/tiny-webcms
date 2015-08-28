@@ -197,7 +197,7 @@ void Send404WithMsg(SimpleSocket* s, char *msg)
 
     sprintf(buf, "HTTP/1.0 404 Not Found\r\n" \
         "Connection: Close\r\n" \
-        "Content-Length: %d\r\n" \
+        "Content-Length: %lu\r\n" \
         "Content-Type: text/html\r\n\r\n", strlen(msg));
     s->sSend(buf, strlen(buf));
     s->sSend(msg, strlen(msg));
@@ -235,13 +235,13 @@ void SendAuth(SimpleSocket* s, char* cookie, bool success)
     if(success)
     {
         str = "<HTML><META HTTP-EQUIV=\"Pragma\" CONTENT=\"no-cache\"><BODY BGCOLOR=\"CBCBCB\"><P>Login successful! This browser session is now logged in. <FORM name='theForm'><INPUT type='button' value='OK' onclick=\"javascript:window.location='./'\"></FORM></HTML>";
-        sprintf(buf, "HTTP/1.0 200 OK\r\nConnection: keep-alive\r\nContent-Length: %d\r\nContent-Type: text/html\r\nSet-Cookie: %s%s; path=/\r\n\r\n%s", strlen(str), AUTH_COOKIE_TAG, cookie, str);
+        sprintf(buf, "HTTP/1.0 200 OK\r\nConnection: keep-alive\r\nContent-Length: %lu\r\nContent-Type: text/html\r\nSet-Cookie: %s%s; path=/\r\n\r\n%s", strlen(str), AUTH_COOKIE_TAG, cookie, str);
     }
     else
     {
         /* changed the response code to 401 - unauthorized */
         str = "<HTML><META HTTP-EQUIV=\"Pragma\" CONTENT=\"no-cache\"><BODY BGCOLOR=\"CBCBCB\">Must log in before you can do that, or your password was incorrect!<BR>Click <A HREF=\"./auth\">here</A>...</HTML>";
-        sprintf(buf, "HTTP/1.0 401 OK\r\nConnection: keep-alive\r\nContent-Length: %d\r\nContent-Type: text/html\r\n\r\n%s", strlen(str), str);
+        sprintf(buf, "HTTP/1.0 401 OK\r\nConnection: keep-alive\r\nContent-Length: %lu\r\nContent-Type: text/html\r\n\r\n%s", strlen(str), str);
     }
 
     s->sSend(buf, strlen(buf));
@@ -253,7 +253,7 @@ void SendAuthPage(SimpleSocket* s)
     char buf[2048];
 
     str = (char*) gAuthPageBuf;
-    sprintf(buf, "HTTP/1.0 200 OK\r\nConnection: keep-alive\r\nContent-Length:%d\r\nContent-Type:text/html\r\n\r\n%s", strlen(str), str);
+    sprintf(buf, "HTTP/1.0 200 OK\r\nConnection: keep-alive\r\nContent-Length:%lu\r\nContent-Type:text/html\r\n\r\n%s", strlen(str), str);
 
     s->sSend(buf, strlen(buf));
 }
@@ -472,7 +472,7 @@ int SendDirectoryHelper(SimpleSocket* s, char* path, int size_only, int javascri
         return -1;
     }
 
-    sprintf(list_file_path, ".%s%s%d",
+    sprintf(list_file_path, ".%s%s%lu",
          path, LIST_FILE_NAME, GetMyThreadId());
 
     fstream* file = new fstream(list_file_path, ios_base::in|ios_base::binary);
@@ -493,8 +493,8 @@ int SendDirectoryHelper(SimpleSocket* s, char* path, int size_only, int javascri
         }
     }
     sprintf(htmlbuffer, "HTTP/1.0 200 OK\r\n");
-    char* headers = "Content-Type: text/html\r\nContent-Length: %d\r\nConnection: close\r\n\r\n";
-    if(javascript) headers = "Content-Type: application/javascript\r\nContent-Length: %d\r\nConnection: close\r\n\r\n";
+    char* headers = "Content-Type: text/html\r\nContent-Length: %u\r\nConnection: close\r\n\r\n";
+    if(javascript) headers = "Content-Type: application/javascript\r\nContent-Length: %u\r\nConnection: close\r\n\r\n";
     sprintf(htmlbuffer + strlen(htmlbuffer), headers,
             size);
 
@@ -726,7 +726,7 @@ void CreateDirFile(char* path)
         return;
 
     /* generate directory list file */
-    sprintf(systemcmd, "%s \".%s\" > \".%s%s%d\"",LIST_FILE_COMMAND, path, path, LIST_FILE_NAME, GetMyThreadId());
+    sprintf(systemcmd, "%s \".%s\" > \".%s%s%lu\"",LIST_FILE_COMMAND, path, path, LIST_FILE_NAME, GetMyThreadId());
     ConvertSlashes(systemcmd + strlen(LIST_FILE_COMMAND));
 
     SystemCall(systemcmd);

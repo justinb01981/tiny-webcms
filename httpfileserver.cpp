@@ -959,7 +959,7 @@ void SendUploadSuccessful(SimpleSocket* s)
     char buf[BUFFER_SIZE];
 
     sprintf(buf, "HTTP/1.0 200 OK\r\nConnection: close\r\n"
-                 "Content-Type: text/html\r\nContent-Length: %d\r\n\r\n"
+                 "Content-Type: text/html\r\nContent-Length: %lu\r\n\r\n"
                  "%s",
                  strlen(contentStr), contentStr);
     r = 0;
@@ -986,7 +986,7 @@ void SendDeleteSuccessful(SimpleSocket* s)
 
     strcat(buf, contentStr);
     sprintf(buf, "HTTP/1.0 200 OK\r\nConnection: close\r\n"
-                 "Content-Type: text/html\r\nContent-Length: %d\r\n\r\n"
+                 "Content-Type: text/html\r\nContent-Length: %lu\r\n\r\n"
                  "%s",
                  strlen(contentStr), contentStr);
     r = 0;
@@ -1409,7 +1409,7 @@ int HandleSpecialFile(char *args, SimpleSocket* s, char *req_headers, bool *spec
     {
         sprintf(headers, 
             "HTTP/1.0 200 OK\r\nConnection: Close\r\n"
-            "Content-Length:%d\r\nContent-Type:image/gif\r\n\r\n",
+            "Content-Length:%lu\r\nContent-Type:image/gif\r\n\r\n",
             sizeof(gopher_unknown_gif));
         sendBuf(s, headers, strlen(headers));
         sendBuf(s, (char*) gopher_unknown_gif, sizeof(gopher_unknown_gif));
@@ -1419,7 +1419,7 @@ int HandleSpecialFile(char *args, SimpleSocket* s, char *req_headers, bool *spec
     {
         sprintf(headers, 
             "HTTP/1.0 200 OK\r\nConnection: Close\r\n"
-            "Content-Length:%d\r\nContent-Type:image/gif\r\n\r\n",
+            "Content-Length:%lu\r\nContent-Type:image/gif\r\n\r\n",
             sizeof(gopher_menu_gif));
         sendBuf(s, headers, strlen(headers));
         sendBuf(s, (char*) gopher_menu_gif, sizeof(gopher_menu_gif));
