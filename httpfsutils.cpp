@@ -39,7 +39,7 @@
 
 using namespace std;
 
-#define BUFFER_SIZE 2000
+#define BUFFER_SIZE 4096
 
 unsigned long GetMyThreadId();
 
@@ -464,7 +464,8 @@ int SendDirectoryHelper(SimpleSocket* s, char* path, int size_only, int javascri
     char deletecmd[BUFFER_SIZE];
     char *header;
     int r = 0, size = 0, headerslen = 0;
-    unsigned int count = 0;;
+    unsigned int count = 0;
+    int html_len;
 
     if(!SystemParamSafe(path))
     {
@@ -495,6 +496,7 @@ int SendDirectoryHelper(SimpleSocket* s, char* path, int size_only, int javascri
     sprintf(htmlbuffer, "HTTP/1.0 200 OK\r\n");
     char* headers = "Content-Type: text/html\r\nContent-Length: %u\r\nConnection: close\r\n\r\n";
     if(javascript) headers = "Content-Type: application/javascript\r\nContent-Length: %u\r\nConnection: close\r\n\r\n";
+    html_len = strlen(htmlbuffer);
     sprintf(htmlbuffer + strlen(htmlbuffer), headers,
             size);
 
@@ -502,7 +504,8 @@ int SendDirectoryHelper(SimpleSocket* s, char* path, int size_only, int javascri
    
     if(javascript) goto js_skip_head; 
     //sprintf(htmlbuffer + strlen(htmlbuffer), "%s <H2>%s</H2>", gIndexPageHead, path);
-    sprintf(htmlbuffer + strlen(htmlbuffer), "%s<!--", gIndexPageHead);
+    html_len = strlen(htmlbuffer);
+    sprintf(htmlbuffer + html_len, "%s<!--", gIndexPageHead);
 
     js_skip_head:
     /* append "Up one directory" link */
