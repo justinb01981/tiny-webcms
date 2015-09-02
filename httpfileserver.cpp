@@ -322,6 +322,7 @@ int HandleCommand(SimpleSocket* s, char* cmdbuf, int len)
     size_t path_len_reserve = 20;
 
     bool special_file_js = false;
+    unsigned long fileSize = 0;
 
     memset(filepath, 0, sizeof(filepath));
 
@@ -418,12 +419,14 @@ int HandleCommand(SimpleSocket* s, char* cmdbuf, int len)
         sprintf(tmp, "Last-Modified: %s\r\n", lm_str);
         strcat(buf, tmp);
         LookupContentTypeByExt(filepath, contentType);
-        sprintf(tmp, "Content-Length: %d\r\nContent-Type: %s\r\n", GetFileSize(file), contentType);
+        fileSize = GetFileSize(file);
+        sprintf(tmp, "Content-Length: %lu\r\nContent-Type: %s\r\nContent-Range: bytes %lu-%lu/%lu\r\n", fileSize, contentType, (unsigned long) 0, fileSize, fileSize);
         strcat(buf, tmp);
         strcat(buf, "\r\n");
 
         s->sSend(buf, strlen(buf));
 
+    
         send_buf = new char[send_buf_size];
         while(send_buf && !file->eof())    /* read and send file */
         {
