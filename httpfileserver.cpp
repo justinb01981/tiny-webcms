@@ -322,7 +322,9 @@ int HandleCommand(SimpleSocket* s, char* cmdbuf, int len)
     size_t path_len_reserve = 20;
 
     bool special_file_js = false;
-    unsigned long fileSize = 0;
+
+    unsigned long range_begin = 0, range_end = 0, range_tot_len = 0;
+    char* tofree = NULL;
 
     memset(filepath, 0, sizeof(filepath));
 
@@ -366,7 +368,29 @@ int HandleCommand(SimpleSocket* s, char* cmdbuf, int len)
             }
         }
 
-        strcpy(buf, "HTTP/1.0 200 OK");
+        tofree = strdup(headersbuf);
+        if(tofree)
+        {
+           char* token;
+
+           while ((token = strsep(&tofree, "\r\n")) != NULL) {
+               const char* hdr_tok = "Range: bytes=";
+               if(strncmp(token, hdr_tok, strlen(hdr_tok)) == 0) {
+                   char *pbeg = token + strlen(hdr_tok);
+                   char *psep = strstr(token, "-");
+                   if(psep)
+                   {
+                       *psep = '\0'; psep++;
+                       if(sscanf(pbeg, "%lu", &range_begin) != 1) range_begin = 0;
+                       if(sscanf(psep, "%lu", &range_end) != 1) range_end = 0;
+                   }
+               }
+           }
+
+           free(tofree);
+        }
+
+        strcpy(buf, "HTTP/1.1 200 OK");
         strcat(buf, crlf);
 
         strncpy(filepath, args, sizeof(filepath) - path_len_reserve);
@@ -419,28 +443,39 @@ int HandleCommand(SimpleSocket* s, char* cmdbuf, int len)
         sprintf(tmp, "Last-Modified: %s\r\n", lm_str);
         strcat(buf, tmp);
         LookupContentTypeByExt(filepath, contentType);
-        fileSize = GetFileSize(file);
-        sprintf(tmp, "Content-Length: %lu\r\nContent-Type: %s\r\nContent-Range: bytes %lu-%lu/%lu\r\n", fileSize, contentType, (unsigned long) 0, fileSize, fileSize);
+        range_tot_len = GetFileSize(file);
+        if(range_end == 0) range_end = range_tot_len-1;
+        sprintf(tmp, "Connection: close\r\nContent-Type: %s\r\nContent-Encoding: identity\r\nContent-Length: %lu\r\nContent-Range: bytes %lu-%lu/%lu\r\n", contentType, (range_end - range_begin)+1, (unsigned long) range_begin, range_end, range_tot_len);
         strcat(buf, tmp);
         strcat(buf, "\r\n");
 
         s->sSend(buf, strlen(buf));
 
-    
         send_buf = new char[send_buf_size];
+        range_tot_len = (range_end - range_begin)+1;
+
+        file->seekg(range_begin, ios_base::beg);
+
         while(send_buf && !file->eof())    /* read and send file */
         {
             size_t readsome = MIN(send_buf_size, ((total_bytes_per_sec * bwm_sleep_ms)/1000));
             bwm_sleep(bwm_sleep_ms);
             
             file->read(send_buf, readsome);
+
+            char* send_buf_start = send_buf;
+            
             unsigned long r = file->gcount();
             if(r <= 0)
                 break;
 
-            int ns = s->sSend(send_buf, r);
+            if(range_tot_len < r) r = range_tot_len;
+
+            int ns = s->sSend(send_buf_start, r);
             if(ns <= 0)
                 break;
+
+            range_tot_len -= ns;
         }
         
         if(send_buf) delete send_buf;
