@@ -322,6 +322,7 @@ int HandleCommand(SimpleSocket* s, char* cmdbuf, int len)
     size_t path_len_reserve = 20;
 
     bool special_file_js = false;
+    bool rangeRequested = false;
 
     unsigned long range_begin = 0, range_end = 0, range_tot_len = 0;
     char* tofree = NULL;
@@ -376,6 +377,7 @@ int HandleCommand(SimpleSocket* s, char* cmdbuf, int len)
            while ((token = strsep(&tofree, "\r\n")) != NULL) {
                const char* hdr_tok = "Range: bytes=";
                if(strncmp(token, hdr_tok, strlen(hdr_tok)) == 0) {
+                   rangeRequested = true;
                    char *pbeg = token + strlen(hdr_tok);
                    char *psep = strstr(token, "-");
                    if(psep)
@@ -445,7 +447,15 @@ int HandleCommand(SimpleSocket* s, char* cmdbuf, int len)
         LookupContentTypeByExt(filepath, contentType);
         range_tot_len = GetFileSize(file);
         if(range_end == 0) range_end = range_tot_len-1;
-        sprintf(tmp, "Connection: close\r\nContent-Type: %s\r\nContent-Encoding: identity\r\nContent-Length: %lu\r\nContent-Range: bytes %lu-%lu/%lu\r\n", contentType, (range_end - range_begin)+1, (unsigned long) range_begin, range_end, range_tot_len);
+//        sprintf(tmp, "Connection: close\r\nContent-Type: %s\r\nContent-Encoding: identity\r\nContent-Length: %lu\r\nContent-Range: bytes %lu-%lu/%lu\r\n", contentType, (range_end - range_begin)+1, (unsigned long) range_begin, range_end, range_tot_len);
+        sprintf(tmp, "Connection: close\r\nContent-Type: %s\r\nContent-Encoding: identity\r\nContent-Length: %lu\r\n", contentType, (range_end - range_begin)+1);
+        if(rangeRequested)
+        {
+            char rangeTmp[255];
+            sprintf(rangeTmp, "Content-Range: bytes %lu-%lu/%lu\r\n",
+                    (unsigned long) range_begin, range_end, range_tot_len);
+            strcat(tmp, rangeTmp);
+        }
         strcat(buf, tmp);
         strcat(buf, "\r\n");
 
