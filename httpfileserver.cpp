@@ -580,7 +580,7 @@ int HandlePOST(SimpleSocket* s, char* path, char *headersbuf)
     fstream *outfile;
     int i;
     int r;
-    long contentLen;
+    unsigned long contentLen;
     unsigned long total;
     bool postFailCleaner = true, replaceFile = false, b;
 
@@ -593,7 +593,8 @@ int HandlePOST(SimpleSocket* s, char* path, char *headersbuf)
     ptr2 = strchr(ptr, '\r');
     if(!ptr2) return -1;
     *ptr2 = 0;
-    contentLen = atoi(ptr);
+    //contentLen = atoi(ptr);
+    contentLen = strtoul(ptr, NULL, 10);
     if(contentLen < 0) return -1;
     *ptr2 = '\r';
 
