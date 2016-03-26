@@ -495,7 +495,7 @@ int SendDirectoryHelper(SimpleSocket* s, char* path, int size_only, int javascri
     }
     sprintf(htmlbuffer, "HTTP/1.0 200 OK\r\n");
     char* headers = "Content-Type: text/html\r\nContent-Length: %u\r\nConnection: close\r\n\r\n";
-    if(javascript) headers = "Content-Type: application/javascript\r\nContent-Length: %u\r\nConnection: close\r\n\r\n";
+    if(javascript) headers = "Content-Type: application/javascript\r\nContent-Length: %u\r\nConnection: close\r\nAccept-Ranges: bytes\r\n\r\n";
     html_len = strlen(htmlbuffer);
     sprintf(htmlbuffer + strlen(htmlbuffer), headers,
             size);

@@ -448,7 +448,7 @@ int HandleCommand(SimpleSocket* s, char* cmdbuf, int len)
         range_tot_len = GetFileSize(file);
         if(range_end == 0) range_end = range_tot_len-1;
 //        sprintf(tmp, "Connection: close\r\nContent-Type: %s\r\nContent-Encoding: identity\r\nContent-Length: %lu\r\nContent-Range: bytes %lu-%lu/%lu\r\n", contentType, (range_end - range_begin)+1, (unsigned long) range_begin, range_end, range_tot_len);
-        sprintf(tmp, "Connection: close\r\nContent-Type: %s\r\nContent-Encoding: identity\r\nContent-Length: %lu\r\n", contentType, (range_end - range_begin)+1);
+        sprintf(tmp, "Connection: close\r\nAccept-Ranges: bytes\r\nContent-Type: %s\r\nContent-Encoding: identity\r\nContent-Length: %lu\r\n", contentType, (range_end - range_begin)+1);
         if(rangeRequested)
         {
             char rangeTmp[255];
@@ -466,7 +466,7 @@ int HandleCommand(SimpleSocket* s, char* cmdbuf, int len)
 
         file->seekg(range_begin, ios_base::beg);
 
-        while(send_buf && !file->eof())    /* read and send file */
+        while(send_buf && !file->eof() && range_tot_len > 0)    /* read and send file */
         {
             size_t readsome = MIN(send_buf_size, ((total_bytes_per_sec * bwm_sleep_ms)/1000));
             bwm_sleep(bwm_sleep_ms);
@@ -1007,7 +1007,7 @@ void SendUploadSuccessful(SimpleSocket* s)
            "onclick=\"javascript:window.location='./'\"></HTML>";
     char buf[BUFFER_SIZE];
 
-    sprintf(buf, "HTTP/1.0 200 OK\r\nConnection: close\r\n"
+    sprintf(buf, "HTTP/1.0 200 OK\r\nConnection: close\r\nAccept-Ranges: bytes\r\n"
                  "Content-Type: text/html\r\nContent-Length: %lu\r\n\r\n"
                  "%s",
                  strlen(contentStr), contentStr);
@@ -1034,7 +1034,7 @@ void SendDeleteSuccessful(SimpleSocket* s)
     char buf[BUFFER_SIZE];
 
     strcat(buf, contentStr);
-    sprintf(buf, "HTTP/1.0 200 OK\r\nConnection: close\r\n"
+    sprintf(buf, "HTTP/1.0 200 OK\r\nConnection: close\r\nAccept-Ranges: bytes\r\n"
                  "Content-Type: text/html\r\nContent-Length: %lu\r\n\r\n"
                  "%s",
                  strlen(contentStr), contentStr);
