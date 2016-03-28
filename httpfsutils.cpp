@@ -212,6 +212,19 @@ void Send404(SimpleSocket *s)
     Send404WithMsg(s, fnf);
 }
 
+void Send416(SimpleSocket* s, unsigned long len)
+{
+    char buf[512];
+
+    sprintf(buf, "HTTP/1.0 416 Range not satisfiable\r\n" \
+        "Connection: Close\r\n" \
+        "Content-Range: */%lu\r\n" \
+        "Content-Type: text/html\r\n\r\n", len);
+    s->sSend(buf, strlen(buf));
+
+    return;
+}
+
 void SendRedirect(SimpleSocket* s, char *location)
 {
     char *p1 =

@@ -205,7 +205,7 @@ int main(int argc, char* argv[])
        strstr(gPermissions, "e") != NULL) cout << "/exec_cmd [args]" << " - really dangerous!";    cout << endl;
 
     listen_sock = new SimpleSocket(port, "0.0.0.0", MAX_CONNECTIONS);
-    if(!listen_sock) goto quit;
+    if(!listen_sock || listen_sock->getError() != 0) goto quit;
 
     done = false;
 
@@ -305,6 +305,7 @@ int HandleCommand(SimpleSocket* s, char* cmdbuf, int len)
     char filepath[BUFFER_SIZE];
     char localPath[BUFFER_SIZE];
     char contentType[64];
+    char contentRange[255] = {0};
     char lm_str[255];
 
     char* workptr = NULL;
@@ -323,6 +324,7 @@ int HandleCommand(SimpleSocket* s, char* cmdbuf, int len)
 
     bool special_file_js = false;
     bool rangeRequested = false;
+    char* pResponseCode = NULL;
 
     unsigned long range_begin = 0, range_end = 0, range_tot_len = 0;
     char* tofree = NULL;
@@ -392,8 +394,8 @@ int HandleCommand(SimpleSocket* s, char* cmdbuf, int len)
            free(tofree);
         }
 
-        strcpy(buf, "HTTP/1.1 200 OK");
-        strcat(buf, crlf);
+        strcpy(buf, "HTTP/1.1 200 OK\r\n");
+        pResponseCode = &buf[9];
 
         strncpy(filepath, args, sizeof(filepath) - path_len_reserve);
         err = GetLocalFile(filepath, localPath, sizeof(localPath), &file, false, false);
@@ -446,16 +448,24 @@ int HandleCommand(SimpleSocket* s, char* cmdbuf, int len)
         strcat(buf, tmp);
         LookupContentTypeByExt(filepath, contentType);
         range_tot_len = GetFileSize(file);
+
+        if(range_begin >= range_tot_len)
+        {
+            Send416(s, range_tot_len);
+            break;
+        }
+
         if(range_end == 0) range_end = range_tot_len-1;
 //        sprintf(tmp, "Connection: close\r\nContent-Type: %s\r\nContent-Encoding: identity\r\nContent-Length: %lu\r\nContent-Range: bytes %lu-%lu/%lu\r\n", contentType, (range_end - range_begin)+1, (unsigned long) range_begin, range_end, range_tot_len);
-        sprintf(tmp, "Connection: close\r\nAccept-Ranges: bytes\r\nContent-Type: %s\r\nContent-Encoding: identity\r\nContent-Length: %lu\r\n", contentType, (range_end - range_begin)+1);
         if(rangeRequested)
         {
-            char rangeTmp[255];
-            sprintf(rangeTmp, "Content-Range: bytes %lu-%lu/%lu\r\n",
+            /* hack: change to 206 partial content */
+            if(pResponseCode) pResponseCode[2] = '6';
+
+            sprintf(contentRange, "Content-Range: bytes %lu-%lu/%lu\r\n",
                     (unsigned long) range_begin, range_end, range_tot_len);
-            strcat(tmp, rangeTmp);
         }
+        sprintf(tmp, "Connection: close\r\nAccept-Ranges: bytes\r\n%sContent-Type: %s\r\nContent-Encoding: identity\r\nContent-Length: %lu\r\nExpires: 0\r\n", contentRange, contentType, (range_end - range_begin)+1);
         strcat(buf, tmp);
         strcat(buf, "\r\n");
 
@@ -539,7 +549,7 @@ int HandleCommand(SimpleSocket* s, char* cmdbuf, int len)
         strcat(buf, tmp);
         strcat(buf, "Connection: Keep-Alive\r\n");
         LookupContentTypeByExt(args, contentType);
-        sprintf(tmp, "Content-Length: %d\r\nContent-Type: %s\r\n",
+        sprintf(tmp, "Content-Length: %d\r\nContent-Type: %s\r\nExpires: 0\r\n",
                 GetFileSize(file), contentType);
         strcat(buf, tmp);
 
@@ -1008,7 +1018,7 @@ void SendUploadSuccessful(SimpleSocket* s)
     char buf[BUFFER_SIZE];
 
     sprintf(buf, "HTTP/1.0 200 OK\r\nConnection: close\r\nAccept-Ranges: bytes\r\n"
-                 "Content-Type: text/html\r\nContent-Length: %lu\r\n\r\n"
+                 "Content-Type: text/html\r\nContent-Length: %lu\r\nExpires: 0\r\n\r\n"
                  "%s",
                  strlen(contentStr), contentStr);
     r = 0;
@@ -1035,7 +1045,7 @@ void SendDeleteSuccessful(SimpleSocket* s)
 
     strcat(buf, contentStr);
     sprintf(buf, "HTTP/1.0 200 OK\r\nConnection: close\r\nAccept-Ranges: bytes\r\n"
-                 "Content-Type: text/html\r\nContent-Length: %lu\r\n\r\n"
+                 "Content-Type: text/html\r\nContent-Length: %lu\r\nExpires: 0\r\n\r\n"
                  "%s",
                  strlen(contentStr), contentStr);
     r = 0;

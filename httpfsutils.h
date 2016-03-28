@@ -105,6 +105,7 @@ bool isWhiteSpc(char c);
 char ContainsAnyChar(char* haystack, char* needles);
 void Send404(SimpleSocket* s);
 void Send404WithMsg(SimpleSocket* s, char *msg);
+void Send416(SimpleSocket* s, unsigned long file_len);
 void SendRedirect(SimpleSocket* s, char *location);
 void SendAuth(SimpleSocket* s, char* cookie, bool success);
 void SendAuthPage(SimpleSocket* s);
