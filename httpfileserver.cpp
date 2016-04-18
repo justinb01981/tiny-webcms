@@ -94,7 +94,7 @@ Semaphore authsem;
 
 char gLogPart2[4096];
 
-size_t total_bytes_per_sec = 2500000; /* per connection */
+size_t total_bytes_per_sec = 0; /* per connection */
 int bwm_sleep_ms = 100;
 int send_buf_size = 250000; /* the size of the read-buffer for sending files */
 bool adminPasswordSet = false;
@@ -478,8 +478,9 @@ int HandleCommand(SimpleSocket* s, char* cmdbuf, int len)
 
         while(send_buf && !file->eof() && range_tot_len > 0)    /* read and send file */
         {
-            size_t readsome = MIN(send_buf_size, ((total_bytes_per_sec * bwm_sleep_ms)/1000));
-            bwm_sleep(bwm_sleep_ms);
+            size_t readsome = send_buf_size;
+            if(total_bytes_per_sec) readsome = total_bytes_per_sec * (bwm_sleep_ms/1000);
+            if(total_bytes_per_sec != 0) bwm_sleep(bwm_sleep_ms);
             
             file->read(send_buf, readsome);
 
