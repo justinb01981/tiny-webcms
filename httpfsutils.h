@@ -10,7 +10,7 @@
 
 //static const char* gIndexPageHead = "<HTML><META HTTP-EQUIV=\"Pragma\" CONTENT=\"no-cache\"><BODY BGCOLOR=\"CBCBCB\">";
 static const char* gUploadFileBuffer1 = "<BR><BR><HR><P>Upload file:<FORM name='theform' enctype='multipart/form-data' method='POST' action='./upload_file'><INPUT type='hidden' name='path' value='";
-static const char* gUploadFileBuffer2 = "'><INPUT type='file' name='upload_file' size=30><BR><INPUT type='button' value='Upload' onclick='this.form.submit()'></FORM><HR>\n \
+static const char* gUploadFileBuffer2 = "'>filename:<INPUT type='text' name='create_filename2'><BR><INPUT type='file' name='upload_file' size=30><BR><INPUT type='button' value='Upload' onclick='this.form.submit()'></FORM><HR>\n \
                                         <P>Admin: <A HREF=\"./auth\">(Click here to login)</A>, or <A HREF=\"./auth_logout\">(here to logout)</A><FORM name='theform2' enctype='multipart/form-data' method='POST' action='./admin_command'><SELECT name='cmd'><OPTION value='del'>Delete\n<OPTION value='mkdir'>Create Directory<OPTION value='exec'>exec\n</SELECT>&nbsp;&nbsp; name:<INPUT type='text' name='admin_filename'><BR>optional arguments:<INPUT type='text' name='admin_args'><BR><INPUT type='button' value='Go' onclick='this.form.submit()'></FORM>";
 static const char* gAuthPageBuf = "<HTML><META HTTP-EQUIV=\"Pragma\" CONTENT=\"no-cache\"><BODY BGCOLOR=\"CBCBCB\"><P>Password:<FORM name='theform2' enctype='multipart/form-data' method='POST' action='./auth'><INPUT type='password' name='auth_password'> <INPUT type='button' value='Login' onclick='this.form.submit()'></FORM></HTML>";
 static const char* gIndexCMSPageHead = 
@@ -24,9 +24,9 @@ static const char* gIndexCMSPageHead =
 "    document.getElementById(imgId).hidden=false;\n"
 "    btn.hidden=true;\n"
 "}\n"
-"function tableJournalAdd(title, log, file, count, thumb, tags) {\n"
+"function tableJournalAdd(title, log, file, count, thumb, tags, isdir) {\n"
 "    var imgId = file;\n"
-"    var action = file.endsWith('/') || file.endsWith('\\\\')? 'change-directory': 'view/download';\n"
+"    var action = isdir? 'change-directory': 'view/download';\n"
 "    tableJournalBuffer += \n"
 "        '<tr>' +\n"
 "        '<td>'+title+'</td><td>'+log+'</td>'+'<td><a href='+file+'>'+action+'</a></td><td ><img id=\"'+imgId+'\" width=\"64\" height=\"64\" hidden=true src=\"http_icon0.gif\"><button onclick=\"onPreview(this, \\\''+imgId+'\\\', \\\''+file+'\\\');\">preview</button></td>'+\n"
@@ -52,7 +52,7 @@ static const char* gIndexCMSPageHead =
 "                        'No log entry',\n"
 "                        fileList[i].url, 1,\n"
 "                        fileList[i].thumbnail,\n"
-"                        '');\n"
+"                        '', fileList[i].is_dir);\n"
 "    }\n"
 "    tableJournalDone();\n"
 "}\n"

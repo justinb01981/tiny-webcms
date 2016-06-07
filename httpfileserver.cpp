@@ -44,6 +44,7 @@ using namespace std;
 #define CRLFCRLF "\r\n\r\n"
 #define FILE_UPLOAD_TAG "uploaded_file"
 #define FILE_NAME_TAG "filename="
+#define CREATE_FILE_NAME_TAG "create_filename2"
 #define PATH_NAME_TAG "path="
 #define BOUNDARY_TAG "boundary="
 #define CONTENT_LENGTH_TAG "Content-Length:"
@@ -587,6 +588,7 @@ int HandleCommand(SimpleSocket* s, char* cmdbuf, int len)
 int HandlePOST(SimpleSocket* s, char* path, char *headersbuf)
 {
     char filename[MAX_FILENAME_SIZE];
+    char filename2[MAX_FILENAME_SIZE];
     char admin_args[MAX_FILENAME_SIZE];
     char admin_command[64];
     char* filePath = NULL;
@@ -666,13 +668,32 @@ int HandlePOST(SimpleSocket* s, char* path, char *headersbuf)
             }
         }
 
+        /* find the filename2 */
+	total = 0;
+        if(ReadAndBufferUntil(s, CREATE_FILE_NAME_TAG, false, NULL, 0, &total) < 0)
+            return -1;
+
+        r = ReadAndBufferUntil(s, "\n", false, NULL, 0, &total);
+        if(r < 0) return -1;
+        r = ReadAndBufferUntil(s, "\n", false, NULL, 0, &total);
+        if(r < 0) return -1;
+
+        total = 0;
+        r = ReadAndBufferUntil(s, "\r", false, filename2, sizeof(filename2)-1, &total);
+        if(r < 0) return -1;
+        filename2[r] = 0;
+
+        total = 0;
         /* find the filename */
         if(ReadAndBufferUntil(s, FILE_NAME_TAG, false, NULL, 0, &total) < 0)
             return -1;
-
+        
         r = ReadAndBufferUntil(s, "\r", false, filename, sizeof(filename)-1, &total);
         if(r < 0) return -1;
         filename[r] = 0;
+
+        /* allow filename2 to override */
+        if(strlen(filename2) > 0 && strchr(filename2, '.')) memcpy(filename, filename2, r);
 
         /* strip off leading dirs in the filename */
         ptr = filename + strlen(filename);
