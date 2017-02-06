@@ -693,7 +693,7 @@ int HandlePOST(SimpleSocket* s, char* path, char *headersbuf)
         filename[r] = 0;
 
         /* allow filename2 to override */
-        if(strlen(filename2) > 0 && strchr(filename2, '.')) memcpy(filename, filename2, r);
+        if(strlen(filename2) > 0 && strchr(filename2, '.')) strncpy(filename, filename2, sizeof(filename)-2);
 
         /* strip off leading dirs in the filename */
         ptr = filename + strlen(filename);
