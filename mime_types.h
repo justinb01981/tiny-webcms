@@ -22,6 +22,8 @@ static char* mime_table[] = {
     " ", "application/octet-stream",
     "wav", "audio/x-wav",
     "zip", "application/zip",
+    "plist", "application/x-plist",
+    "ipa", "application/octet-stream",
            0
     };
 
