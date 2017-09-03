@@ -132,6 +132,7 @@ void CleanString(char* str)
 
 char* allowedCharsHTTP = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=./";
 char* allowedCharsJS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=./";
+char* allowedCharsJSString = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=./\" ";
 void Escape(char* str, int len, const char* allowedChars)
 {
     int dest, i;
@@ -475,6 +476,7 @@ int SendDirectoryHelper(SimpleSocket* s, char* path, int size_only, int javascri
     char file_path[BUFFER_SIZE];
     char list_file_path[BUFFER_SIZE];
     char deletecmd[BUFFER_SIZE];
+    char strtmp[BUFFER_SIZE];
     char *header;
     int r = 0, size = 0, headerslen = 0;
     unsigned int count = 0;
@@ -580,7 +582,10 @@ int SendDirectoryHelper(SimpleSocket* s, char* path, int size_only, int javascri
         {
            if(count > 0) strcat(htmlbuffer, ",\n");
            strcat(htmlbuffer, "{'name':'");
-           strcat(htmlbuffer, file_path);
+
+           strncpy(strtmp, file_path, sizeof(strtmp)-1);
+           Escape(strtmp, sizeof(strtmp)-1, allowedCharsJSString);
+           strcat(htmlbuffer, strtmp);
            strcat(htmlbuffer, "', 'url':'");
            Escape(file_path, sizeof(file_path)-1, allowedCharsJS);
            strcat(htmlbuffer, file_path);
