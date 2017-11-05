@@ -637,6 +637,8 @@ int HandlePOST(SimpleSocket* s, char* path, char *headersbuf)
         return -1;
     }
 
+    cout << "finalBoundary: " << finalBoundary << endl;
+
     total = 0;
 
     AUTH_SEM_TAKE;
@@ -669,9 +671,12 @@ int HandlePOST(SimpleSocket* s, char* path, char *headersbuf)
         }
 
         /* find the filename2 */
+        /*
 	total = 0;
         if(ReadAndBufferUntil(s, CREATE_FILE_NAME_TAG, false, NULL, 0, &total) < 0)
             return -1;
+
+        
 
         r = ReadAndBufferUntil(s, "\n", false, NULL, 0, &total);
         if(r < 0) return -1;
@@ -682,6 +687,8 @@ int HandlePOST(SimpleSocket* s, char* path, char *headersbuf)
         r = ReadAndBufferUntil(s, "\r", false, filename2, sizeof(filename2)-1, &total);
         if(r < 0) return -1;
         filename2[r] = 0;
+       
+        */
 
         total = 0;
         /* find the filename */
@@ -746,8 +753,13 @@ int HandlePOST(SimpleSocket* s, char* path, char *headersbuf)
         strcat(filePath, ptr);
         /* build file path */
         r = GetLocalFile(filePath, localPath, sizeof(localPath), &outfile, true, b | replaceFile);
+
+        cout << "File upload (local path):" << localPath << endl;
+
         if(r != 0)
         {
+            cout << "upload failed" << endl;
+
             delete filePath;
             if(postFailCleaner)
             {
