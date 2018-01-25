@@ -56,7 +56,7 @@ void HandleConnectionMT(void* params);
 int HandleCommand(SimpleSocket* s, char* buf, int len);
 int HandlePOST(SimpleSocket* s, char* path, char* headersbuf);
 int ParseCommand(char* cmd, char* args, int args_len);
-unsigned int GetFileSize(fstream* file);
+unsigned long GetFileSize(fstream* file);
 bool endsWith(char* str, char* end);
 void UnescapeHttp(char* str);
 void SendUploadSuccessful(SimpleSocket* s);
@@ -551,7 +551,7 @@ int HandleCommand(SimpleSocket* s, char* cmdbuf, int len)
         strcat(buf, tmp);
         strcat(buf, "Connection: Keep-Alive\r\n");
         LookupContentTypeByExt(args, contentType);
-        sprintf(tmp, "Content-Length: %d\r\nContent-Type: %s\r\nExpires: 0\r\n",
+        sprintf(tmp, "Content-Length: %lu\r\nContent-Type: %s\r\nExpires: 0\r\n",
                 GetFileSize(file), contentType);
         strcat(buf, tmp);
 
@@ -1094,10 +1094,10 @@ void SendDeleteSuccessful(SimpleSocket* s)
     return;
 }
 
-unsigned int GetFileSize(fstream* file)
+unsigned long GetFileSize(fstream* file)
 {
     file->seekg(0, ios_base::end);
-    unsigned int eof = file->tellg();
+    unsigned long eof = file->tellg();
     file->seekg(0, ios_base::beg);
 
     return eof;
